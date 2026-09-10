@@ -1,7 +1,8 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-# Tiny Tapeout Verilog Project Template
+# A 4x4 KMap in VGA Playground
 
+An interactive 4×4 Karnaugh Map visualizer implemented in Verilog, designed for the VGA Playground environment. This project demonstrates digital logic simplification by rendering K-map inputs and minimized outputs directly on a VGA display, making Boolean algebra concepts more intuitive and visually engaging.
 - [Read the documentation for project](docs/info.md)
 
 ## What is Tiny Tapeout?
