@@ -21,23 +21,23 @@ Simplified Boolean expressions can be visualized by grouping adjacent cells, mak
 
 1. Simulation
 
--Run the Verilog modules in a simulator (e.g., ModelSim, Icarus Verilog, or Vivado) to verify logic correctness.
+- Run the Verilog modules in a simulator (e.g., ModelSim, Icarus Verilog, or Vivado) to verify logic correctness.
 
--Check that input combinations map correctly to the expected K-map cells.
+- Check that input combinations map correctly to the expected K-map cells.
 
 2. VGA Playground Deployment
 
--Upload the design files to the VGA Playground platform.
+- Upload the design files to the VGA Playground platform.
 
--Use the provided switches/buttons in the playground to toggle input variables.
+- Use the provided switches/buttons in the playground to toggle input variables.
 
--Observe the VGA output: cells should update dynamically based on inputs.
+- Observe the VGA output: cells should update dynamically based on inputs.
 
 3. Validation
 
--Compare the displayed K-map with manual truth table/K-map derivations.
+- Compare the displayed K-map with manual truth table/K-map derivations.
 
--Confirm that grouping and minimization match expected Boolean simplifications.
+- Confirm that grouping and minimization match expected Boolean simplifications.
 
 ## External hardware
 
