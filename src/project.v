@@ -1,6 +1,6 @@
 `default_nettype none
 
-module tt_um_vga_kmap (
+module tt_um_vga_example (
     input wire [7:0] ui_in,
     output wire [7:0] uo_out,
     input wire [7:0] uio_in,
@@ -10,9 +10,6 @@ module tt_um_vga_kmap (
     input wire clk,
     input wire rst_n
 );
-
-    /* verilator lint_off UNUSEDSIGNAL */
-    /* verilator lint_off UNUSED */
 
     /* =========================================================
        VGA
@@ -635,11 +632,11 @@ module tt_um_vga_kmap (
 
             if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
-                selected_group_mask[selected_group_count] =
+                selected_group_mask[selected_group_count[3:0]] =
                     candidate_mask;
 
-                selected_group_color[selected_group_count] =
-                    group_color(selected_group_count);
+                selected_group_color[selected_group_count[3:0]] =
+                    group_color({27'd0, selected_group_count});
 
                 selected_group_count =
                     selected_group_count + 1'b1;
@@ -662,11 +659,11 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
-                            group_color(selected_group_count);
+                        selected_group_color[selected_group_count[3:0]] =
+                            group_color({27'd0, selected_group_count});
 
                         selected_group_count =
                             selected_group_count + 1'b1;
@@ -693,11 +690,11 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
-                            group_color(selected_group_count);
+                        selected_group_color[selected_group_count[3:0]] =
+                            group_color({27'd0, selected_group_count});
 
                         selected_group_count =
                             selected_group_count + 1'b1;
@@ -724,11 +721,11 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
-                            group_color(selected_group_count);
+                        selected_group_color[selected_group_count[3:0]] =
+                            group_color({27'd0, selected_group_count});
 
                         selected_group_count =
                             selected_group_count + 1'b1;
@@ -755,11 +752,11 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
-                            group_color(selected_group_count);
+                        selected_group_color[selected_group_count[3:0]] =
+                            group_color({27'd0, selected_group_count});
 
                         selected_group_count =
                             selected_group_count + 1'b1;
@@ -824,13 +821,13 @@ module tt_um_vga_kmap (
 
             if (kmap_value == 16'hFFFF) begin
 
-                bool_text[bt_pos] = "1";
+                bool_text[bt_pos[6:0]] = "1";
                 bt_pos = bt_pos + 1;
 
             end
             else if (selected_group_count == 0) begin
 
-                bool_text[bt_pos] = "0";
+                bool_text[bt_pos[6:0]] = "0";
                 bt_pos = bt_pos + 1;
 
             end
@@ -841,7 +838,7 @@ module tt_um_vga_kmap (
                     if (bt_g < selected_group_count) begin
 
                         if (!bt_first_term) begin
-                            bool_text[bt_pos] = "+";
+                            bool_text[bt_pos[6:0]] = "+";
                             bt_pos = bt_pos + 1;
                         end
 
@@ -886,49 +883,49 @@ module tt_um_vga_kmap (
 
 
                         if (bt_a0 && !bt_a1) begin
-                            bool_text[bt_pos]="A";
+                            bool_text[bt_pos[6:0]]="A";
                             bt_pos=bt_pos+1;
-                            bool_text[bt_pos]="'";
+                            bool_text[bt_pos[6:0]]="'";
                             bt_pos=bt_pos+1;
                         end
                         else if (bt_a1 && !bt_a0) begin
-                            bool_text[bt_pos]="A";
+                            bool_text[bt_pos[6:0]]="A";
                             bt_pos=bt_pos+1;
                         end
 
 
                         if (bt_b0 && !bt_b1) begin
-                            bool_text[bt_pos]="B";
+                            bool_text[bt_pos[6:0]]="B";
                             bt_pos=bt_pos+1;
-                            bool_text[bt_pos]="'";
+                            bool_text[bt_pos[6:0]]="'";
                             bt_pos=bt_pos+1;
                         end
                         else if (bt_b1 && !bt_b0) begin
-                            bool_text[bt_pos]="B";
+                            bool_text[bt_pos[6:0]]="B";
                             bt_pos=bt_pos+1;
                         end
 
 
                         if (bt_c0 && !bt_c1) begin
-                            bool_text[bt_pos]="C";
+                            bool_text[bt_pos[6:0]]="C";
                             bt_pos=bt_pos+1;
-                            bool_text[bt_pos]="'";
+                            bool_text[bt_pos[6:0]]="'";
                             bt_pos=bt_pos+1;
                         end
                         else if (bt_c1 && !bt_c0) begin
-                            bool_text[bt_pos]="C";
+                            bool_text[bt_pos[6:0]]="C";
                             bt_pos=bt_pos+1;
                         end
 
 
                         if (bt_d0 && !bt_d1) begin
-                            bool_text[bt_pos]="D";
+                            bool_text[bt_pos[6:0]]="D";
                             bt_pos=bt_pos+1;
-                            bool_text[bt_pos]="'";
+                            bool_text[bt_pos[6:0]]="'";
                             bt_pos=bt_pos+1;
                         end
                         else if (bt_d1 && !bt_d0) begin
-                            bool_text[bt_pos]="D";
+                            bool_text[bt_pos[6:0]]="D";
                             bt_pos=bt_pos+1;
                         end
 
