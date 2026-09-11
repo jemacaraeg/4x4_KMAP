@@ -1,6 +1,6 @@
 `default_nettype none
 
-module tt_um_vga_kmap (
+module tt_um_vga_example (
     input wire [7:0] ui_in,
     output wire [7:0] uo_out,
     input wire [7:0] uio_in,
@@ -574,7 +574,7 @@ module tt_um_vga_kmap (
        ========================================================= */
 
     function [2:0] group_color;
-        input integer index;
+        input [4:0] index;
 
         begin
 
@@ -632,10 +632,10 @@ module tt_um_vga_kmap (
 
             if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
-                selected_group_mask[selected_group_count] =
+                selected_group_mask[selected_group_count[3:0]] =
                     candidate_mask;
 
-                selected_group_color[selected_group_count] =
+                selected_group_color[selected_group_count[3:0]] =
                     group_color(selected_group_count);
 
                 selected_group_count =
@@ -659,10 +659,10 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
+                        selected_group_color[selected_group_count[3:0]] =
                             group_color(selected_group_count);
 
                         selected_group_count =
@@ -690,10 +690,10 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
+                        selected_group_color[selected_group_count[3:0]] =
                             group_color(selected_group_count);
 
                         selected_group_count =
@@ -721,10 +721,10 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
+                        selected_group_color[selected_group_count[3:0]] =
                             group_color(selected_group_count);
 
                         selected_group_count =
@@ -752,10 +752,10 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
+                        selected_group_color[selected_group_count[3:0]] =
                             group_color(selected_group_count);
 
                         selected_group_count =
@@ -793,6 +793,17 @@ module tt_um_vga_kmap (
     reg bt_first_term;
 
     always @(*) begin
+
+        // Defaults prevent inferred latches in combinational logic.
+        bt_a0 = 1'b0;
+        bt_a1 = 1'b0;
+        bt_b0 = 1'b0;
+        bt_b1 = 1'b0;
+        bt_c0 = 1'b0;
+        bt_c1 = 1'b0;
+        bt_d0 = 1'b0;
+        bt_d1 = 1'b0;
+        bool_text_len = 8'd0;
 
         for (bt_i = 0; bt_i < 128; bt_i = bt_i + 1)
             bool_text[bt_i] = " ";
@@ -926,7 +937,7 @@ module tt_um_vga_kmap (
 
         end
 
-        bool_text_len = bt_pos;
+        bool_text_len = bt_pos & 8'hFF;
 
 
         for (bt_i = 0; bt_i < 64; bt_i = bt_i + 1) begin
@@ -1411,8 +1422,8 @@ module tt_um_vga_kmap (
     end
 
 
-    wire [5:0] char_pos =
-        text_local_x / TEXT_CHAR_W;
+    wire [6:0] char_pos =
+        (text_local_x / TEXT_CHAR_W) & 7'h7F;
 
     wire [3:0] font_y =
         (text_local_y % TEXT_CHAR_H) / TEXT_SCALE;
