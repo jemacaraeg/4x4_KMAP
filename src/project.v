@@ -11,6 +11,9 @@ module tt_um_vga_kmap (
     input wire rst_n
 );
 
+    /* verilator lint_off UNUSEDSIGNAL */
+    /* verilator lint_off UNUSED */
+
     /* =========================================================
        VGA
        ========================================================= */
@@ -574,7 +577,7 @@ module tt_um_vga_kmap (
        ========================================================= */
 
     function [2:0] group_color;
-        input [4:0] index;
+        input integer index;
 
         begin
 
@@ -632,10 +635,10 @@ module tt_um_vga_kmap (
 
             if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
-                selected_group_mask[selected_group_count[3:0]] =
+                selected_group_mask[selected_group_count] =
                     candidate_mask;
 
-                selected_group_color[selected_group_count[3:0]] =
+                selected_group_color[selected_group_count] =
                     group_color(selected_group_count);
 
                 selected_group_count =
@@ -659,10 +662,10 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count[3:0]] =
+                        selected_group_mask[selected_group_count] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count[3:0]] =
+                        selected_group_color[selected_group_count] =
                             group_color(selected_group_count);
 
                         selected_group_count =
@@ -690,10 +693,10 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count[3:0]] =
+                        selected_group_mask[selected_group_count] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count[3:0]] =
+                        selected_group_color[selected_group_count] =
                             group_color(selected_group_count);
 
                         selected_group_count =
@@ -721,10 +724,10 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count[3:0]] =
+                        selected_group_mask[selected_group_count] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count[3:0]] =
+                        selected_group_color[selected_group_count] =
                             group_color(selected_group_count);
 
                         selected_group_count =
@@ -752,10 +755,10 @@ module tt_um_vga_kmap (
 
                     if (selected_group_count < 16) begin
 
-                        selected_group_mask[selected_group_count[3:0]] =
+                        selected_group_mask[selected_group_count] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count[3:0]] =
+                        selected_group_color[selected_group_count] =
                             group_color(selected_group_count);
 
                         selected_group_count =
@@ -785,7 +788,7 @@ module tt_um_vga_kmap (
     integer bt_i;
     integer bt_g;
     integer bt_m;
-    integer bt_pos;
+    reg [7:0] bt_pos;
     reg bt_a0, bt_a1;
     reg bt_b0, bt_b1;
     reg bt_c0, bt_c1;
@@ -937,7 +940,7 @@ module tt_um_vga_kmap (
 
         end
 
-        bool_text_len = bt_pos & 8'hFF;
+        bool_text_len = bt_pos;
 
 
         for (bt_i = 0; bt_i < 64; bt_i = bt_i + 1) begin
@@ -1165,9 +1168,9 @@ module tt_um_vga_kmap (
        TEXT SYSTEM
        ========================================================= */
 
-    localparam TEXT_SCALE  = 2;
-    localparam TEXT_CHAR_W = 12;
-    localparam TEXT_CHAR_H = 14;
+    localparam [9:0] TEXT_SCALE  = 10'd2;
+    localparam [9:0] TEXT_CHAR_W = 10'd12;
+    localparam [9:0] TEXT_CHAR_H = 10'd14;
 
     localparam COL_TEXT_Y = 76;
 
@@ -1422,11 +1425,17 @@ module tt_um_vga_kmap (
     end
 
 
-    wire [6:0] char_pos =
-        (text_local_x / TEXT_CHAR_W) & 7'h7F;
+    wire [9:0] char_pos_full;
+    wire [9:0] font_y_full;
 
-    wire [3:0] font_y =
-        (text_local_y % TEXT_CHAR_H) / TEXT_SCALE;
+    wire [6:0] char_pos;
+    wire [3:0] font_y;
+
+    assign char_pos_full = text_local_x / TEXT_CHAR_W;
+    assign font_y_full   = (text_local_y % TEXT_CHAR_H) / TEXT_SCALE;
+
+    assign char_pos = char_pos_full[6:0];
+    assign font_y   = font_y_full[3:0];
 
 
     /* =========================================================
