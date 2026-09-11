@@ -2462,13 +2462,15 @@ module tt_um_vga_example (
        OUTPUT PINS
        ========================================================= */
 
-  assign uo_out[7] = r_out_hsync;
-  assign uo_out[6] = r_out_B;
-  assign uo_out[5] = r_out_G;
-  assign uo_out[4] = r_out_R;
-  assign uo_out[3] = r_out_vsync;
-  assign uo_out[2] = r_out_B[1];
-  assign uo_out[1] = r_out_G[1];
-  assign uo_out[0] = r_out_R[1];
+    assign uo_out[7] = hsync;
+    assign uo_out[3] = vsync;
+
+    assign uo_out[6] = red;
+    assign uo_out[5] = green;
+    assign uo_out[4] = blue;
+
+    assign uo_out[2] = red;
+    assign uo_out[1] = green;
+    assign uo_out[0] = blue;
 
 endmodule
