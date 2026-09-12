@@ -184,21 +184,7 @@ module tt_um_vga_kmap (
         end
     endfunction
 
-    /*
-     * 4-CELL GROUPS
-     *
-     * Only the ordering of the 2x2 groups is changed.
-     *
-     * Original:
-     * j=4 -> 3030 = 4,5,12,13
-     * j=5 -> A0A0 = 5,7,13,15
-     *
-     * New:
-     * j=4 -> A0A0
-     * j=5 -> 3030
-     *
-     * Everything else remains in the same order.
-     */
+
 
     function [15:0] group4;
         input [4:0] index;
@@ -297,8 +283,6 @@ module tt_um_vga_kmap (
         end
     endfunction
 
-    reg [6:0] group_index [0:7];
-
     reg [6:0] solve_index;
     reg solving;
 
@@ -353,9 +337,6 @@ module tt_um_vga_kmap (
             solve_index <= 7'd0;
             solving <= 1'b0;
 
-            for (sg = 0; sg < 8; sg = sg + 1)
-                group_index[sg] <= 7'd0;
-
         end
 
         else begin
@@ -380,9 +361,6 @@ module tt_um_vga_kmap (
                 solve_index <= 7'd0;
                 solving <= 1'b0;
 
-                for (sg = 0; sg < 8; sg = sg + 1)
-                    group_index[sg] <= 7'd0;
-
             end
 
             else if (solving) begin
@@ -392,10 +370,6 @@ module tt_um_vga_kmap (
                     if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
                         if (selected_group_count < 4'd8) begin
-
-                            group_index[
-                                selected_group_count[2:0]
-                            ] <= solve_index;
 
                             selected_group_count <=
                                 selected_group_count + 4'd1;
@@ -464,292 +438,10 @@ module tt_um_vga_kmap (
                     solve_index <= 7'd0;
                     solving <= 1'b1;
 
-                    for (sg = 0; sg < 8; sg = sg + 1)
-                        group_index[sg] <= 7'd0;
-
                 end
             end
         end
     end
-
-    /*
-     * GROUP MEMBERSHIP
-     *
-     * Uses the SAME j swap as group4().
-     *
-     * Candidate numbers:
-     *
-     * 0       = 16-cell
-     * 1..8    = 8-cell
-     * 9..32   = 4-cell
-     * 33..64  = 2-cell
-     * 65..80  = 1-cell
-     */
-
-    function candidate_contains;
-        input [6:0] index;
-        input [3:0] minterm;
-
-        reg [1:0] r;
-        reg [1:0] c;
-        reg [1:0] br;
-        reg [1:0] bc;
-        reg [4:0] j;
-
-        begin
-
-            r = {
-                minterm[3],
-                minterm[3] ^ minterm[2]
-            };
-
-            c = {
-                minterm[1],
-                minterm[1] ^ minterm[0]
-            };
-
-            candidate_contains = 1'b0;
-
-            /*
-             * 16-cell group
-             */
-            if (index == 7'd0) begin
-
-                candidate_contains = 1'b1;
-
-            end
-
-            /*
-             * 8-cell groups
-             */
-            else if (index <= 7'd4) begin
-
-                br = index - 7'd1;
-
-                if ((r == br) ||
-                    (r == (br + 2'd1)))
-                    candidate_contains = 1'b1;
-
-            end
-
-            else if (index <= 7'd8) begin
-
-                bc = index - 7'd5;
-
-                if ((c == bc) ||
-                    (c == (bc + 2'd1)))
-                    candidate_contains = 1'b1;
-
-            end
-
-            /*
-             * 4-cell complete rows
-             */
-            else if (index <= 7'd12) begin
-
-                br = index - 7'd9;
-
-                if (r == br)
-                    candidate_contains = 1'b1;
-
-            end
-
-            /*
-             * 4-cell complete columns
-             */
-            else if (index <= 7'd16) begin
-
-                bc = index - 7'd13;
-
-                if (c == bc)
-                    candidate_contains = 1'b1;
-
-            end
-
-            /*
-             * 4-cell 2x2 groups
-             *
-             * Swap j=4 and j=5 so:
-             *
-             * A0A0 comes before 3030.
-             */
-            else if (index <= 7'd32) begin
-
-                j = index - 7'd17;
-
-                if (j == 5'd4)
-                    j = 5'd5;
-                else if (j == 5'd5)
-                    j = 5'd4;
-
-                br = j[3:2];
-                bc = j[1:0];
-
-                if (((r == br) ||
-                     (r == (br + 2'd1))) &&
-                    ((c == bc) ||
-                     (c == (bc + 2'd1))))
-                    candidate_contains = 1'b1;
-
-            end
-
-            /*
-             * 2-cell horizontal groups
-             */
-            else if (index <= 7'd48) begin
-
-                j = index - 7'd33;
-
-                br = j[3:2];
-                bc = j[1:0];
-
-                if ((r == br) &&
-                    ((c == bc) ||
-                     (c == (bc + 2'd1))))
-                    candidate_contains = 1'b1;
-
-            end
-
-            /*
-             * 2-cell vertical groups
-             */
-            else if (index <= 7'd64) begin
-
-                j = index - 7'd49;
-
-                br = j[3:2];
-                bc = j[1:0];
-
-                if (((r == br) ||
-                     (r == (br + 2'd1))) &&
-                    (c == bc))
-                    candidate_contains = 1'b1;
-
-            end
-
-            /*
-             * 1-cell groups
-             */
-            else begin
-
-                j = index - 7'd65;
-
-                br = j[3:2];
-                bc = j[1:0];
-
-                if ((r == br) &&
-                    (c == bc))
-                    candidate_contains = 1'b1;
-
-            end
-        end
-    endfunction
-
-    wire edge_top =
-        (tile_y < BORDER);
-
-    wire edge_bottom =
-        (tile_y >= TILE_H - BORDER);
-
-    wire edge_left =
-        (tile_x < BORDER);
-
-    wire edge_right =
-        (tile_x >= TILE_W - BORDER);
-
-    wire edge_active =
-        edge_top |
-        edge_bottom |
-        edge_left |
-        edge_right;
-
-    wire [1:0] border_neighbor_row =
-        edge_top ?
-            ((tile_row == 2'd0) ? 2'd3 : tile_row - 2'd1) :
-
-        edge_bottom ?
-            ((tile_row == 2'd3) ? 2'd0 : tile_row + 2'd1) :
-
-            tile_row;
-
-    wire [1:0] border_neighbor_col =
-        edge_left ?
-            ((tile_col == 2'd0) ? 2'd3 : tile_col - 2'd1) :
-
-        edge_right ?
-            ((tile_col == 2'd3) ? 2'd0 : tile_col + 2'd1) :
-
-            tile_col;
-
-    wire [3:0] border_neighbor_minterm =
-        kmap_minterm(
-            border_neighbor_row,
-            border_neighbor_col
-        );
-
-    wire [7:0] border_current_groups = {
-        candidate_contains(group_index[7], display_minterm),
-        candidate_contains(group_index[6], display_minterm),
-        candidate_contains(group_index[5], display_minterm),
-        candidate_contains(group_index[4], display_minterm),
-        candidate_contains(group_index[3], display_minterm),
-        candidate_contains(group_index[2], display_minterm),
-        candidate_contains(group_index[1], display_minterm),
-        candidate_contains(group_index[0], display_minterm)
-    };
-
-    wire [7:0] border_neighbor_groups = {
-        candidate_contains(group_index[7], border_neighbor_minterm),
-        candidate_contains(group_index[6], border_neighbor_minterm),
-        candidate_contains(group_index[5], border_neighbor_minterm),
-        candidate_contains(group_index[4], border_neighbor_minterm),
-        candidate_contains(group_index[3], border_neighbor_minterm),
-        candidate_contains(group_index[2], border_neighbor_minterm),
-        candidate_contains(group_index[1], border_neighbor_minterm),
-        candidate_contains(group_index[0], border_neighbor_minterm)
-    };
-
-    wire [7:0] border_hits =
-        border_current_groups &
-        ~border_neighbor_groups;
-
-    function [2:0] border_color;
-        input [7:0] hits;
-
-        begin
-
-            if (hits[0])
-                border_color = 3'b001;
-
-            else if (hits[1])
-                border_color = 3'b010;
-
-            else if (hits[2])
-                border_color = 3'b011;
-
-            else if (hits[3])
-                border_color = 3'b100;
-
-            else if (hits[4])
-                border_color = 3'b101;
-
-            else if (hits[5])
-                border_color = 3'b110;
-
-            else if (hits[6])
-                border_color = 3'b001;
-
-            else if (hits[7])
-                border_color = 3'b010;
-
-            else
-                border_color = 3'b000;
-
-        end
-    endfunction
-
-    wire [2:0] border_rgb =
-        border_color(border_hits);
 
     reg red;
     reg green;
@@ -765,16 +457,7 @@ module tt_um_vga_kmap (
 
             if (simplify_mode) begin
 
-                if (edge_active &&
-                    (border_rgb != 3'b000)) begin
-
-                    red   = border_rgb[2];
-                    green = border_rgb[1];
-                    blue  = border_rgb[0];
-
-                end
-
-                else if (digit_on) begin
+                if (digit_on) begin
 
                     red   = 1'b1;
                     green = 1'b1;
