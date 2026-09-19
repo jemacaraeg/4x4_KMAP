@@ -37,14 +37,6 @@ module tt_um_vga_kmap (
 
     /* =========================================================
        INPUT CONTROLS
-
-       1 = UP
-       2 = DOWN
-       3 = LEFT
-       4 = RIGHT
-       5 = TOGGLE
-       0 = SIMPLIFY
-       7 = RESET
        ========================================================= */
 
     wire key_up       = ui_in[1];
@@ -976,11 +968,6 @@ module tt_um_vga_kmap (
 
     /* =========================================================
        TWO-COLOR BORDER STORAGE
-
-       Each side stores up to two distinct group colors.
-
-       If two different groups share the same physical border,
-       both colors are displayed as two adjacent bands.
        ========================================================= */
 
     reg [2:0] top_border_color1;
@@ -1002,36 +989,34 @@ module tt_um_vga_kmap (
 
     integer bi;
 
-
     always @(*) begin
 
-        top_border_color1    = 3'b000;
-        top_border_color2    = 3'b000;
+        top_border_color1 = 3'b000;
+        top_border_color2 = 3'b000;
 
         bottom_border_color1 = 3'b000;
         bottom_border_color2 = 3'b000;
 
-        left_border_color1   = 3'b000;
-        left_border_color2   = 3'b000;
+        left_border_color1 = 3'b000;
+        left_border_color2 = 3'b000;
 
-        right_border_color1  = 3'b000;
-        right_border_color2  = 3'b000;
+        right_border_color1 = 3'b000;
+        right_border_color2 = 3'b000;
 
-        top_border_count    = 2'd0;
+        top_border_count = 2'd0;
         bottom_border_count = 2'd0;
-        left_border_count   = 2'd0;
-        right_border_count  = 2'd0;
+        left_border_count = 2'd0;
+        right_border_count = 2'd0;
 
 
         for (bi = 0; bi < 16; bi = bi + 1) begin
 
-            if (bi < selected_group_count) begin
+            if (selected_group_mask[bi][display_minterm]) begin
 
 
                 /* TOP */
 
-                if (selected_group_mask[bi][display_minterm] &&
-                    !selected_group_mask[bi][top_minterm]) begin
+                if (!selected_group_mask[bi][top_minterm]) begin
 
                     if (top_border_count == 2'd0) begin
 
@@ -1059,8 +1044,7 @@ module tt_um_vga_kmap (
 
                 /* BOTTOM */
 
-                if (selected_group_mask[bi][display_minterm] &&
-                    !selected_group_mask[bi][bottom_minterm]) begin
+                if (!selected_group_mask[bi][bottom_minterm]) begin
 
                     if (bottom_border_count == 2'd0) begin
 
@@ -1088,8 +1072,7 @@ module tt_um_vga_kmap (
 
                 /* LEFT */
 
-                if (selected_group_mask[bi][display_minterm] &&
-                    !selected_group_mask[bi][left_minterm]) begin
+                if (!selected_group_mask[bi][left_minterm]) begin
 
                     if (left_border_count == 2'd0) begin
 
@@ -1117,8 +1100,7 @@ module tt_um_vga_kmap (
 
                 /* RIGHT */
 
-                if (selected_group_mask[bi][display_minterm] &&
-                    !selected_group_mask[bi][right_minterm]) begin
+                if (!selected_group_mask[bi][right_minterm]) begin
 
                     if (right_border_count == 2'd0) begin
 
@@ -1152,6 +1134,9 @@ module tt_um_vga_kmap (
 
     /* =========================================================
        TEXT SYSTEM
+       
+       Header and control text removed.
+       Row/column labels and Boolean expression retained.
        ========================================================= */
 
     localparam TEXT_SCALE  = 2;
@@ -1172,21 +1157,10 @@ module tt_um_vga_kmap (
     localparam ROW3_Y = 275;
     localparam ROW4_Y = 350;
 
-    localparam TITLE_Y = 40;
-
     localparam BOOL_Y1 = 416;
     localparam BOOL_Y2 = 430;
 
-    localparam CONTROL_Y1 = 450;
-    localparam CONTROL_Y2 = 466;
-
-    localparam TITLE_CHARS = 28;
     localparam BOOL_MAX_CHARS = 64;
-
-    localparam CONTROL1_X = 50;
-    localparam CONTROL2_X = 194;
-    localparam CONTROL1_CHARS = 45;
-    localparam CONTROL2_CHARS = 31;
 
 
     /* =========================================================
@@ -1243,16 +1217,7 @@ module tt_um_vga_kmap (
         (vpos < ROW4_Y + TEXT_CHAR_H);
 
 
-    wire inside_title =
-        (hpos >= 158) &&
-        (hpos < 158 + TITLE_CHARS * TEXT_CHAR_W) &&
-        (vpos >= TITLE_Y) &&
-        (vpos < TITLE_Y + TEXT_CHAR_H);
-
-
-    wire [7:0] bool_second_len;
-
-    assign bool_second_len =
+    wire bool_second_len =
         (bool_text_len > 8'd53) ?
         (bool_text_len - 8'd53) :
         8'd0;
@@ -1288,21 +1253,7 @@ module tt_um_vga_kmap (
         (vpos < BOOL_Y2 + TEXT_CHAR_H);
 
 
-    wire inside_control1 =
-        (hpos >= CONTROL1_X) &&
-        (hpos < CONTROL1_X + CONTROL1_CHARS * TEXT_CHAR_W) &&
-        (vpos >= CONTROL_Y1) &&
-        (vpos < CONTROL_Y1 + TEXT_CHAR_H);
-
-    wire inside_control2 =
-        (hpos >= CONTROL2_X) &&
-        (hpos < CONTROL2_X + CONTROL2_CHARS * TEXT_CHAR_W) &&
-        (vpos >= CONTROL_Y2) &&
-        (vpos < CONTROL_Y2 + TEXT_CHAR_H);
-
-
     wire inside_any_text =
-        inside_title |
         inside_col1 |
         inside_col2 |
         inside_col3 |
@@ -1312,9 +1263,7 @@ module tt_um_vga_kmap (
         inside_row3 |
         inside_row4 |
         inside_bool1 |
-        inside_bool2 |
-        inside_control1 |
-        inside_control2;
+        inside_bool2;
 
 
     /* =========================================================
@@ -1329,13 +1278,7 @@ module tt_um_vga_kmap (
         text_local_x = 10'd0;
         text_local_y = 10'd0;
 
-        if (inside_title) begin
-
-            text_local_x = hpos - 158;
-            text_local_y = vpos - TITLE_Y;
-
-        end
-        else if (inside_col1) begin
+        if (inside_col1) begin
 
             text_local_x = hpos - COL1_X;
             text_local_y = vpos - COL_TEXT_Y;
@@ -1395,18 +1338,6 @@ module tt_um_vga_kmap (
             text_local_y = vpos - BOOL_Y2;
 
         end
-        else if (inside_control1) begin
-
-            text_local_x = hpos - CONTROL1_X;
-            text_local_y = vpos - CONTROL_Y1;
-
-        end
-        else if (inside_control2) begin
-
-            text_local_x = hpos - CONTROL2_X;
-            text_local_y = vpos - CONTROL_Y2;
-
-        end
 
     end
 
@@ -1428,45 +1359,7 @@ module tt_um_vga_kmap (
 
         control_char = " ";
 
-        if (inside_title) begin
-
-            case (char_pos)
-
-                0: control_char="4";
-                1: control_char="X";
-                2: control_char="4";
-                3: control_char=" ";
-                4: control_char="K";
-                5: control_char="M";
-                6: control_char="A";
-                7: control_char="P";
-                8: control_char=" ";
-                9: control_char="B";
-                10: control_char="Y";
-                11: control_char=" ";
-                12: control_char="B";
-                13: control_char="A";
-                14: control_char="G";
-                15: control_char="A";
-                16: control_char=" ";
-                17: control_char="&";
-                18: control_char=" ";
-                19: control_char="M";
-                20: control_char="A";
-                21: control_char="C";
-                22: control_char="A";
-                23: control_char="R";
-                24: control_char="A";
-                25: control_char="E";
-                26: control_char="G";
-
-                default:
-                    control_char=" ";
-
-            endcase
-
-        end
-        else if (inside_col1) begin
+        if (inside_col1) begin
 
             case (char_pos)
 
@@ -1588,109 +1481,6 @@ module tt_um_vga_kmap (
 
             control_char =
                 bool_text[64 + char_pos];
-
-        end
-        else if (inside_control1) begin
-
-            case (char_pos)
-
-                0: control_char="[";
-                1: control_char="1";
-                2: control_char="]";
-                3: control_char=" ";
-
-                4: control_char="U";
-                5: control_char="P";
-                6: control_char=" ";
-
-                7: control_char="[";
-                8: control_char="2";
-                9: control_char="]";
-                10: control_char=" ";
-
-                11: control_char="D";
-                12: control_char="O";
-                13: control_char="W";
-                14: control_char="N";
-                15: control_char=" ";
-
-                16: control_char="[";
-                17: control_char="3";
-                18: control_char="]";
-                19: control_char=" ";
-
-                20: control_char="L";
-                21: control_char="E";
-                22: control_char="F";
-                23: control_char="T";
-                24: control_char=" ";
-
-                25: control_char="[";
-                26: control_char="4";
-                27: control_char="]";
-                28: control_char=" ";
-
-                29: control_char="R";
-                30: control_char="I";
-                31: control_char="G";
-                32: control_char="H";
-                33: control_char="T";
-                34: control_char=" ";
-
-                35: control_char="[";
-                36: control_char="5";
-                37: control_char="]";
-                38: control_char=" ";
-
-                39: control_char="T";
-                40: control_char="O";
-                41: control_char="G";
-                42: control_char="G";
-                43: control_char="L";
-                44: control_char="E";
-
-                default:
-                    control_char=" ";
-
-            endcase
-
-        end
-        else if (inside_control2) begin
-
-            case (char_pos)
-
-                0: control_char="[";
-                1: control_char="0";
-                2: control_char="]";
-                3: control_char=" ";
-
-                4: control_char="S";
-                5: control_char="I";
-                6: control_char="M";
-                7: control_char="P";
-                8: control_char="L";
-                9: control_char="I";
-                10: control_char="F";
-                11: control_char="Y";
-
-                12: control_char=" ";
-
-                13: control_char="[";
-                14: control_char="7";
-                15: control_char="]";
-
-                16: control_char=" ";
-
-                17: control_char="R";
-                18: control_char="E";
-                19: control_char="S";
-                20: control_char="E";
-                21: control_char="T";
-
-                default:
-                    control_char=" ";
-
-            endcase
 
         end
 
@@ -1893,6 +1683,19 @@ module tt_um_vga_kmap (
                     endcase
                 end
 
+                "Q": begin
+                    case(y)
+                        0: font_row=5'b01110;
+                        1: font_row=5'b10001;
+                        2: font_row=5'b10001;
+                        3: font_row=5'b10001;
+                        4: font_row=5'b10101;
+                        5: font_row=5'b10010;
+                        6: font_row=5'b01101;
+                        default: font_row=5'b00000;
+                    endcase
+                end
+
                 "R": begin
                     case(y)
                         0: font_row=5'b11110;
@@ -1945,6 +1748,19 @@ module tt_um_vga_kmap (
                     endcase
                 end
 
+                "V": begin
+                    case(y)
+                        0: font_row=5'b10001;
+                        1: font_row=5'b10001;
+                        2: font_row=5'b10001;
+                        3: font_row=5'b10001;
+                        4: font_row=5'b10001;
+                        5: font_row=5'b01010;
+                        6: font_row=5'b00100;
+                        default: font_row=5'b00000;
+                    endcase
+                end
+
                 "W": begin
                     case(y)
                         0: font_row=5'b10001;
@@ -1952,7 +1768,20 @@ module tt_um_vga_kmap (
                         2: font_row=5'b10001;
                         3: font_row=5'b10101;
                         4: font_row=5'b10101;
-                        5: font_row=5'b11011;
+                        5: font_row=5'b10101;
+                        6: font_row=5'b01010;
+                        default: font_row=5'b00000;
+                    endcase
+                end
+
+                "X": begin
+                    case(y)
+                        0: font_row=5'b10001;
+                        1: font_row=5'b10001;
+                        2: font_row=5'b01010;
+                        3: font_row=5'b00100;
+                        4: font_row=5'b01010;
+                        5: font_row=5'b10001;
                         6: font_row=5'b10001;
                         default: font_row=5'b00000;
                     endcase
@@ -1967,6 +1796,19 @@ module tt_um_vga_kmap (
                         4: font_row=5'b00100;
                         5: font_row=5'b00100;
                         6: font_row=5'b00100;
+                        default: font_row=5'b00000;
+                    endcase
+                end
+
+                "Z": begin
+                    case(y)
+                        0: font_row=5'b11111;
+                        1: font_row=5'b00001;
+                        2: font_row=5'b00010;
+                        3: font_row=5'b00100;
+                        4: font_row=5'b01000;
+                        5: font_row=5'b10000;
+                        6: font_row=5'b11111;
                         default: font_row=5'b00000;
                     endcase
                 end
@@ -2012,13 +1854,13 @@ module tt_um_vga_kmap (
 
                 "3": begin
                     case(y)
-                        0: font_row=5'b01110;
-                        1: font_row=5'b10001;
+                        0: font_row=5'b11110;
+                        1: font_row=5'b00001;
                         2: font_row=5'b00001;
-                        3: font_row=5'b00110;
+                        3: font_row=5'b01110;
                         4: font_row=5'b00001;
-                        5: font_row=5'b10001;
-                        6: font_row=5'b01110;
+                        5: font_row=5'b00001;
+                        6: font_row=5'b11110;
                         default: font_row=5'b00000;
                     endcase
                 end
@@ -2040,19 +1882,19 @@ module tt_um_vga_kmap (
                     case(y)
                         0: font_row=5'b11111;
                         1: font_row=5'b10000;
-                        2: font_row=5'b11110;
-                        3: font_row=5'b00001;
+                        2: font_row=5'b10000;
+                        3: font_row=5'b11110;
                         4: font_row=5'b00001;
-                        5: font_row=5'b10001;
-                        6: font_row=5'b01110;
+                        5: font_row=5'b00001;
+                        6: font_row=5'b11110;
                         default: font_row=5'b00000;
                     endcase
                 end
 
                 "6": begin
                     case(y)
-                        0: font_row=5'b00110;
-                        1: font_row=5'b01000;
+                        0: font_row=5'b01110;
+                        1: font_row=5'b10000;
                         2: font_row=5'b10000;
                         3: font_row=5'b11110;
                         4: font_row=5'b10001;
@@ -2075,41 +1917,36 @@ module tt_um_vga_kmap (
                     endcase
                 end
 
-                "K": begin
+                "8": begin
                     case(y)
-                        0: font_row=5'b10001;
-                        1: font_row=5'b10010;
-                        2: font_row=5'b10100;
-                        3: font_row=5'b11000;
-                        4: font_row=5'b10100;
-                        5: font_row=5'b10010;
-                        6: font_row=5'b10001;
-                        default: font_row=5'b00000;
-                    endcase
-                end
-
-                "X": begin
-                    case(y)
-                        0: font_row=5'b10001;
+                        0: font_row=5'b01110;
                         1: font_row=5'b10001;
-                        2: font_row=5'b01010;
-                        3: font_row=5'b00100;
-                        4: font_row=5'b01010;
+                        2: font_row=5'b10001;
+                        3: font_row=5'b01110;
+                        4: font_row=5'b10001;
                         5: font_row=5'b10001;
-                        6: font_row=5'b10001;
+                        6: font_row=5'b01110;
                         default: font_row=5'b00000;
                     endcase
                 end
 
-                "&": begin
+                "9": begin
                     case(y)
-                        0: font_row=5'b01100;
-                        1: font_row=5'b10010;
-                        2: font_row=5'b10100;
-                        3: font_row=5'b01000;
-                        4: font_row=5'b10101;
-                        5: font_row=5'b10010;
-                        6: font_row=5'b01101;
+                        0: font_row=5'b01110;
+                        1: font_row=5'b10001;
+                        2: font_row=5'b10001;
+                        3: font_row=5'b01111;
+                        4: font_row=5'b00001;
+                        5: font_row=5'b00001;
+                        6: font_row=5'b01110;
+                        default: font_row=5'b00000;
+                    endcase
+                end
+
+                "'": begin
+                    case(y)
+                        0: font_row=5'b00100;
+                        1: font_row=5'b00100;
                         default: font_row=5'b00000;
                     endcase
                 end
@@ -2124,24 +1961,11 @@ module tt_um_vga_kmap (
 
                 "+": begin
                     case(y)
-                        1: font_row=5'b00100;
                         2: font_row=5'b00100;
-                        3: font_row=5'b11111;
-                        4: font_row=5'b00100;
+                        3: font_row=5'b00100;
+                        4: font_row=5'b11111;
                         5: font_row=5'b00100;
-                        default: font_row=5'b00000;
-                    endcase
-                end
-
-                "[": begin
-                    case(y)
-                        0: font_row=5'b01110;
-                        1: font_row=5'b01000;
-                        2: font_row=5'b01000;
-                        3: font_row=5'b01000;
-                        4: font_row=5'b01000;
-                        5: font_row=5'b01000;
-                        6: font_row=5'b01110;
+                        6: font_row=5'b00100;
                         default: font_row=5'b00000;
                     endcase
                 end
@@ -2155,14 +1979,6 @@ module tt_um_vga_kmap (
                         4: font_row=5'b00010;
                         5: font_row=5'b00010;
                         6: font_row=5'b01110;
-                        default: font_row=5'b00000;
-                    endcase
-                end
-
-                "'": begin
-                    case(y)
-                        0: font_row=5'b00100;
-                        1: font_row=5'b00100;
                         default: font_row=5'b00000;
                     endcase
                 end
@@ -2213,14 +2029,6 @@ module tt_um_vga_kmap (
 
                 if (simplify_mode) begin
 
-
-                    /* =================================================
-                       FULL 16-CELL GROUP
-
-                       Only the outside border of the entire
-                       4x4 K-map is drawn.
-                       ================================================= */
-
                     if ((kmap_value == 16'hFFFF) &&
                         ((rel_x < BORDER) ||
                          (rel_x >= GRID_W - BORDER) ||
@@ -2232,18 +2040,6 @@ module tt_um_vga_kmap (
                         blue  = 1'b1;
 
                     end
-
-
-                    /* =================================================
-                       TOP BORDER
-
-                       One group:
-                       entire 4-pixel border = color 1
-
-                       Two groups:
-                       first 2 pixels = color 1
-                       second 2 pixels = color 2
-                       ================================================= */
 
                     else if ((tile_y < BORDER) &&
                              (top_border_count != 2'd0)) begin
@@ -2272,11 +2068,6 @@ module tt_um_vga_kmap (
 
                     end
 
-
-                    /* =================================================
-                       BOTTOM BORDER
-                       ================================================= */
-
                     else if ((tile_y >= TILE_H - BORDER) &&
                              (bottom_border_count != 2'd0)) begin
 
@@ -2303,11 +2094,6 @@ module tt_um_vga_kmap (
                         end
 
                     end
-
-
-                    /* =================================================
-                       LEFT BORDER
-                       ================================================= */
 
                     else if ((tile_x < BORDER) &&
                              (left_border_count != 2'd0)) begin
@@ -2336,11 +2122,6 @@ module tt_um_vga_kmap (
 
                     end
 
-
-                    /* =================================================
-                       RIGHT BORDER
-                       ================================================= */
-
                     else if ((tile_x >= TILE_W - BORDER) &&
                              (right_border_count != 2'd0)) begin
 
@@ -2368,13 +2149,6 @@ module tt_um_vga_kmap (
 
                     end
 
-
-                    /* =================================================
-                       MINTERM DISPLAY
-
-                       Keep all 0s visible.
-                       ================================================= */
-
                     else if (digit_on) begin
 
                         red   = 1'b1;
@@ -2384,11 +2158,6 @@ module tt_um_vga_kmap (
                     end
 
                 end
-
-
-                /* =================================================
-                   NORMAL K-MAP / SELECTOR VIEW
-                   ================================================= */
 
                 else begin
 
@@ -2440,10 +2209,7 @@ module tt_um_vga_kmap (
 
             end
 
-
-            /* =================================================
-               TEXT
-               ================================================= */
+            /* No header or control text is rendered here. */
 
             else if (inside_any_text && font_pixel) begin
 
