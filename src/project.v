@@ -11,9 +11,9 @@ module tt_um_vga_kmap (
     input wire rst_n
 );
 
-    /* =========================================================
-       VGA
-       ========================================================= */
+    // =========================================================
+    // VGA
+    // =========================================================
 
     wire hsync;
     wire vsync;
@@ -34,10 +34,9 @@ module tt_um_vga_kmap (
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
-
-    /* =========================================================
-       INPUT CONTROLS
-       ========================================================= */
+    // =========================================================
+    // INPUT CONTROLS
+    // =========================================================
 
     wire key_up       = ui_in[1];
     wire key_down     = ui_in[2];
@@ -47,10 +46,9 @@ module tt_um_vga_kmap (
     wire key_simplify = ui_in[0];
     wire key_reset    = ui_in[7];
 
-
-    /* =========================================================
-       EDGE DETECTION
-       ========================================================= */
+    // =========================================================
+    // EDGE DETECTION
+    // =========================================================
 
     reg prev_up;
     reg prev_down;
@@ -81,10 +79,9 @@ module tt_um_vga_kmap (
     wire simplify_press =
         key_simplify ^ prev_simplify;
 
-
-    /* =========================================================
-       K-MAP STATE
-       ========================================================= */
+    // =========================================================
+    // K-MAP STATE
+    // =========================================================
 
     reg [1:0] cursor_row;
     reg [1:0] cursor_col;
@@ -93,10 +90,9 @@ module tt_um_vga_kmap (
 
     reg simplify_mode;
 
-
-    /* =========================================================
-       K-MAP MINTERM FUNCTION
-       ========================================================= */
+    // =========================================================
+    // K-MAP MINTERM FUNCTION
+    // =========================================================
 
     function [3:0] kmap_minterm;
         input [1:0] r;
@@ -104,7 +100,6 @@ module tt_um_vga_kmap (
 
         begin
             case ({r,c})
-
                 4'b0000: kmap_minterm = 4'd0;
                 4'b0001: kmap_minterm = 4'd1;
                 4'b0010: kmap_minterm = 4'd3;
@@ -127,21 +122,18 @@ module tt_um_vga_kmap (
 
                 default:
                     kmap_minterm = 4'd0;
-
             endcase
         end
     endfunction
-
 
     wire [3:0] selected_minterm;
 
     assign selected_minterm =
         kmap_minterm(cursor_row,cursor_col);
 
-
-    /* =========================================================
-       MAIN STATE MACHINE
-       ========================================================= */
+    // =========================================================
+    // MAIN STATE MACHINE
+    // =========================================================
 
     always @(posedge clk) begin
 
@@ -149,9 +141,7 @@ module tt_um_vga_kmap (
 
             cursor_row <= 2'd0;
             cursor_col <= 2'd0;
-
             kmap_value <= 16'b0;
-
             simplify_mode <= 1'b0;
 
             prev_up       <= 1'b0;
@@ -173,66 +163,51 @@ module tt_um_vga_kmap (
             prev_reset    <= key_reset;
             prev_simplify <= key_simplify;
 
-
             if (reset_press) begin
 
                 cursor_row <= 2'd0;
                 cursor_col <= 2'd0;
-
                 kmap_value <= 16'b0;
-
                 simplify_mode <= 1'b0;
 
             end
             else if (!simplify_mode) begin
 
                 if (up_press) begin
-
                     if (cursor_row == 2'd0)
                         cursor_row <= 2'd3;
                     else
                         cursor_row <= cursor_row - 2'd1;
-
                 end
 
                 if (down_press) begin
-
                     if (cursor_row == 2'd3)
                         cursor_row <= 2'd0;
                     else
                         cursor_row <= cursor_row + 2'd1;
-
                 end
 
                 if (left_press) begin
-
                     if (cursor_col == 2'd0)
                         cursor_col <= 2'd3;
                     else
                         cursor_col <= cursor_col - 2'd1;
-
                 end
 
                 if (right_press) begin
-
                     if (cursor_col == 2'd3)
                         cursor_col <= 2'd0;
                     else
                         cursor_col <= cursor_col + 2'd1;
-
                 end
 
                 if (toggle_press) begin
-
                     kmap_value[selected_minterm]
                         <= ~kmap_value[selected_minterm];
-
                 end
 
                 if (simplify_press) begin
-
                     simplify_mode <= 1'b1;
-
                 end
 
             end
@@ -241,10 +216,9 @@ module tt_um_vga_kmap (
 
     end
 
-
-    /* =========================================================
-       K-MAP GEOMETRY
-       ========================================================= */
+    // =========================================================
+    // K-MAP GEOMETRY
+    // =========================================================
 
     localparam GRID_X = 90;
     localparam GRID_Y = 100;
@@ -257,7 +231,6 @@ module tt_um_vga_kmap (
 
     localparam BORDER = 4;
 
-
     wire inside_grid;
 
     assign inside_grid =
@@ -266,17 +239,15 @@ module tt_um_vga_kmap (
         (vpos >= GRID_Y) &&
         (vpos < GRID_Y + GRID_H);
 
-
     wire [9:0] rel_x;
     wire [9:0] rel_y;
 
     assign rel_x = hpos - GRID_X;
     assign rel_y = vpos - GRID_Y;
 
-
-    /* =========================================================
-       TILE POSITION
-       ========================================================= */
+    // =========================================================
+    // TILE POSITION
+    // =========================================================
 
     reg [1:0] tile_col;
     reg [1:0] tile_row;
@@ -292,7 +263,6 @@ module tt_um_vga_kmap (
         else
             tile_col = 2'd3;
 
-
         if (rel_y < 75)
             tile_row = 2'd0;
         else if (rel_y < 150)
@@ -304,22 +274,19 @@ module tt_um_vga_kmap (
 
     end
 
-
     wire [3:0] display_minterm;
 
     assign display_minterm =
         kmap_minterm(tile_row,tile_col);
-
 
     wire display_value;
 
     assign display_value =
         kmap_value[display_minterm];
 
-
-    /* =========================================================
-       SELECTED TILE
-       ========================================================= */
+    // =========================================================
+    // SELECTED TILE
+    // =========================================================
 
     wire selected_tile;
 
@@ -327,10 +294,9 @@ module tt_um_vga_kmap (
         (tile_row == cursor_row) &&
         (tile_col == cursor_col);
 
-
-    /* =========================================================
-       POSITION INSIDE TILE
-       ========================================================= */
+    // =========================================================
+    // POSITION INSIDE TILE
+    // =========================================================
 
     wire [9:0] tile_x;
     wire [9:0] tile_y;
@@ -338,10 +304,9 @@ module tt_um_vga_kmap (
     assign tile_x = rel_x % TILE_W;
     assign tile_y = rel_y % TILE_H;
 
-
-    /* =========================================================
-       MINTERM DISPLAY
-       ========================================================= */
+    // =========================================================
+    // MINTERM DISPLAY
+    // =========================================================
 
     wire digit_top;
     wire digit_bottom;
@@ -372,7 +337,6 @@ module tt_um_vga_kmap (
         (tile_y >= 23) &&
         (tile_y < 52);
 
-
     wire digit_on;
 
     assign digit_on =
@@ -383,27 +347,21 @@ module tt_um_vga_kmap (
              digit_left |
              digit_right);
 
-
-    /* =========================================================
-       GROUP CANDIDATE FUNCTIONS
-       ========================================================= */
+    // =========================================================
+    // GROUP CANDIDATE FUNCTIONS
+    // =========================================================
 
     function [15:0] group16;
-        input integer index;
-
         begin
             group16 = 16'hFFFF;
         end
     endfunction
 
-
     function [15:0] group8;
         input integer index;
 
         begin
-
             case (index)
-
                 0: group8 = 16'h00FF;
                 1: group8 = 16'hF0F0;
                 2: group8 = 16'hFF00;
@@ -416,20 +374,15 @@ module tt_um_vga_kmap (
 
                 default:
                     group8 = 16'h0000;
-
             endcase
-
         end
     endfunction
-
 
     function [15:0] group4;
         input integer index;
 
         begin
-
             case (index)
-
                 0:  group4 = 16'h000F;
                 1:  group4 = 16'h00F0;
                 2:  group4 = 16'hF000;
@@ -462,20 +415,15 @@ module tt_um_vga_kmap (
 
                 default:
                     group4 = 16'h0000;
-
             endcase
-
         end
     endfunction
-
 
     function [15:0] group2;
         input integer index;
 
         begin
-
             case (index)
-
                 0:  group2 = 16'h0003;
                 1:  group2 = 16'h000A;
                 2:  group2 = 16'h000C;
@@ -518,20 +466,15 @@ module tt_um_vga_kmap (
 
                 default:
                     group2 = 16'h0000;
-
             endcase
-
         end
     endfunction
-
 
     function [15:0] group1;
         input integer index;
 
         begin
-
             case (index)
-
                 0:  group1 = 16'h0001;
                 1:  group1 = 16'h0002;
                 2:  group1 = 16'h0008;
@@ -554,24 +497,19 @@ module tt_um_vga_kmap (
 
                 default:
                     group1 = 16'h0000;
-
             endcase
-
         end
     endfunction
 
-
-    /* =========================================================
-       GROUP COLORS
-       ========================================================= */
+    // =========================================================
+    // GROUP COLORS
+    // =========================================================
 
     function [2:0] group_color;
         input integer index;
 
         begin
-
             case (index % 6)
-
                 0: group_color = 3'b001;
                 1: group_color = 3'b010;
                 2: group_color = 3'b011;
@@ -581,54 +519,46 @@ module tt_um_vga_kmap (
 
                 default:
                     group_color = 3'b001;
-
             endcase
-
         end
     endfunction
 
-
-    /* =========================================================
-       SELECTED GROUP STORAGE
-       ========================================================= */
+    // =========================================================
+    // SELECTED GROUP STORAGE
+    // =========================================================
 
     reg [15:0] selected_group_mask [0:15];
     reg [2:0]  selected_group_color [0:15];
 
     reg [4:0] selected_group_count;
-
     reg [15:0] covered_minterms;
-
     reg [15:0] candidate_mask;
 
     integer gi;
     integer gidx;
 
-
     always @(*) begin
 
         for (gi = 0; gi < 16; gi = gi + 1) begin
-
             selected_group_mask[gi]  = 16'b0;
             selected_group_color[gi] = 3'b000;
-
         end
 
         selected_group_count = 5'd0;
         covered_minterms = 16'b0;
+        candidate_mask = 16'b0;
 
-
-        candidate_mask = group16(0);
+        candidate_mask = group16();
 
         if ((kmap_value & candidate_mask) == candidate_mask) begin
 
             if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
-                selected_group_mask[selected_group_count] =
+                selected_group_mask[selected_group_count[3:0]] =
                     candidate_mask;
 
-                selected_group_color[selected_group_count] =
-                    group_color(selected_group_count);
+                selected_group_color[selected_group_count[3:0]] =
+                    group_color(selected_group_count[3:0]);
 
                 selected_group_count =
                     selected_group_count + 1'b1;
@@ -640,7 +570,6 @@ module tt_um_vga_kmap (
 
         end
 
-
         for (gidx = 0; gidx < 8; gidx = gidx + 1) begin
 
             candidate_mask = group8(gidx);
@@ -649,13 +578,13 @@ module tt_um_vga_kmap (
 
                 if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
-                    if (selected_group_count < 16) begin
+                    if (selected_group_count < 5'd16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
-                            group_color(selected_group_count);
+                        selected_group_color[selected_group_count[3:0]] =
+                            group_color(selected_group_count[3:0]);
 
                         selected_group_count =
                             selected_group_count + 1'b1;
@@ -670,7 +599,6 @@ module tt_um_vga_kmap (
             end
 
         end
-
 
         for (gidx = 0; gidx < 24; gidx = gidx + 1) begin
 
@@ -680,13 +608,13 @@ module tt_um_vga_kmap (
 
                 if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
-                    if (selected_group_count < 16) begin
+                    if (selected_group_count < 5'd16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
-                            group_color(selected_group_count);
+                        selected_group_color[selected_group_count[3:0]] =
+                            group_color(selected_group_count[3:0]);
 
                         selected_group_count =
                             selected_group_count + 1'b1;
@@ -701,7 +629,6 @@ module tt_um_vga_kmap (
             end
 
         end
-
 
         for (gidx = 0; gidx < 32; gidx = gidx + 1) begin
 
@@ -711,13 +638,13 @@ module tt_um_vga_kmap (
 
                 if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
-                    if (selected_group_count < 16) begin
+                    if (selected_group_count < 5'd16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
-                            group_color(selected_group_count);
+                        selected_group_color[selected_group_count[3:0]] =
+                            group_color(selected_group_count[3:0]);
 
                         selected_group_count =
                             selected_group_count + 1'b1;
@@ -733,7 +660,6 @@ module tt_um_vga_kmap (
 
         end
 
-
         for (gidx = 0; gidx < 16; gidx = gidx + 1) begin
 
             candidate_mask = group1(gidx);
@@ -742,13 +668,13 @@ module tt_um_vga_kmap (
 
                 if ((candidate_mask & ~covered_minterms) != 16'b0) begin
 
-                    if (selected_group_count < 16) begin
+                    if (selected_group_count < 5'd16) begin
 
-                        selected_group_mask[selected_group_count] =
+                        selected_group_mask[selected_group_count[3:0]] =
                             candidate_mask;
 
-                        selected_group_color[selected_group_count] =
-                            group_color(selected_group_count);
+                        selected_group_color[selected_group_count[3:0]] =
+                            group_color(selected_group_count[3:0]);
 
                         selected_group_count =
                             selected_group_count + 1'b1;
@@ -766,10 +692,9 @@ module tt_um_vga_kmap (
 
     end
 
-
-    /* =========================================================
-       BOOLEAN EXPRESSION GENERATOR
-       ========================================================= */
+    // =========================================================
+    // BOOLEAN EXPRESSION GENERATOR
+    // =========================================================
 
     reg [7:0] bool_text [0:127];
     reg [7:0] bool_text_len;
@@ -778,10 +703,16 @@ module tt_um_vga_kmap (
     integer bt_g;
     integer bt_m;
     integer bt_pos;
-    reg bt_a0, bt_a1;
-    reg bt_b0, bt_b1;
-    reg bt_c0, bt_c1;
-    reg bt_d0, bt_d1;
+
+    reg bt_a0;
+    reg bt_a1;
+    reg bt_b0;
+    reg bt_b1;
+    reg bt_c0;
+    reg bt_c1;
+    reg bt_d0;
+    reg bt_d1;
+
     reg bt_first_term;
 
     always @(*) begin
@@ -792,12 +723,24 @@ module tt_um_vga_kmap (
         bt_pos = 0;
         bt_first_term = 1'b1;
 
+        bt_a0 = 1'b0;
+        bt_a1 = 1'b0;
+        bt_b0 = 1'b0;
+        bt_b1 = 1'b0;
+        bt_c0 = 1'b0;
+        bt_c1 = 1'b0;
+        bt_d0 = 1'b0;
+        bt_d1 = 1'b0;
+
+        bool_text_len = 8'd0;
+
         if (simplify_mode) begin
 
             bool_text[0] = "F";
             bool_text[1] = " ";
             bool_text[2] = "=";
             bool_text[3] = " ";
+
             bt_pos = 4;
 
             if (kmap_value == 16'hFFFF) begin
@@ -806,7 +749,7 @@ module tt_um_vga_kmap (
                 bt_pos = bt_pos + 1;
 
             end
-            else if (selected_group_count == 0) begin
+            else if (selected_group_count == 5'd0) begin
 
                 bool_text[bt_pos] = "0";
                 bt_pos = bt_pos + 1;
@@ -825,89 +768,89 @@ module tt_um_vga_kmap (
 
                         bt_first_term = 1'b0;
 
-                        bt_a0=0;
-                        bt_a1=0;
-                        bt_b0=0;
-                        bt_b1=0;
-                        bt_c0=0;
-                        bt_c1=0;
-                        bt_d0=0;
-                        bt_d1=0;
+                        bt_a0 = 1'b0;
+                        bt_a1 = 1'b0;
+                        bt_b0 = 1'b0;
+                        bt_b1 = 1'b0;
+                        bt_c0 = 1'b0;
+                        bt_c1 = 1'b0;
+                        bt_d0 = 1'b0;
+                        bt_d1 = 1'b0;
 
                         for (bt_m = 0; bt_m < 16; bt_m = bt_m + 1) begin
 
                             if (selected_group_mask[bt_g][bt_m]) begin
 
-                                if (bt_m[3] == 0)
-                                    bt_a0=1;
+                                if (bt_m[3] == 1'b0)
+                                    bt_a0 = 1'b1;
                                 else
-                                    bt_a1=1;
+                                    bt_a1 = 1'b1;
 
-                                if (bt_m[2] == 0)
-                                    bt_b0=1;
+                                if (bt_m[2] == 1'b0)
+                                    bt_b0 = 1'b1;
                                 else
-                                    bt_b1=1;
+                                    bt_b1 = 1'b1;
 
-                                if (bt_m[1] == 0)
-                                    bt_c0=1;
+                                if (bt_m[1] == 1'b0)
+                                    bt_c0 = 1'b1;
                                 else
-                                    bt_c1=1;
+                                    bt_c1 = 1'b1;
 
-                                if (bt_m[0] == 0)
-                                    bt_d0=1;
+                                if (bt_m[0] == 1'b0)
+                                    bt_d0 = 1'b1;
                                 else
-                                    bt_d1=1;
+                                    bt_d1 = 1'b1;
 
                             end
 
                         end
 
-
                         if (bt_a0 && !bt_a1) begin
-                            bool_text[bt_pos]="A";
-                            bt_pos=bt_pos+1;
-                            bool_text[bt_pos]="'";
-                            bt_pos=bt_pos+1;
+                            bool_text[bt_pos] = "A";
+                            bt_pos = bt_pos + 1;
+
+                            bool_text[bt_pos] = "'";
+                            bt_pos = bt_pos + 1;
                         end
                         else if (bt_a1 && !bt_a0) begin
-                            bool_text[bt_pos]="A";
-                            bt_pos=bt_pos+1;
+                            bool_text[bt_pos] = "A";
+                            bt_pos = bt_pos + 1;
                         end
-
 
                         if (bt_b0 && !bt_b1) begin
-                            bool_text[bt_pos]="B";
-                            bt_pos=bt_pos+1;
-                            bool_text[bt_pos]="'";
-                            bt_pos=bt_pos+1;
+                            bool_text[bt_pos] = "B";
+                            bt_pos = bt_pos + 1;
+
+                            bool_text[bt_pos] = "'";
+                            bt_pos = bt_pos + 1;
                         end
                         else if (bt_b1 && !bt_b0) begin
-                            bool_text[bt_pos]="B";
-                            bt_pos=bt_pos+1;
+                            bool_text[bt_pos] = "B";
+                            bt_pos = bt_pos + 1;
                         end
-
 
                         if (bt_c0 && !bt_c1) begin
-                            bool_text[bt_pos]="C";
-                            bt_pos=bt_pos+1;
-                            bool_text[bt_pos]="'";
-                            bt_pos=bt_pos+1;
+                            bool_text[bt_pos] = "C";
+                            bt_pos = bt_pos + 1;
+
+                            bool_text[bt_pos] = "'";
+                            bt_pos = bt_pos + 1;
                         end
                         else if (bt_c1 && !bt_c0) begin
-                            bool_text[bt_pos]="C";
-                            bt_pos=bt_pos+1;
+                            bool_text[bt_pos] = "C";
+                            bt_pos = bt_pos + 1;
                         end
-
 
                         if (bt_d0 && !bt_d1) begin
-                            bool_text[bt_pos]="D";
-                            bt_pos=bt_pos+1;
-                            bool_text[bt_pos]="'";
-                            bt_pos=bt_pos+1;
+                            bool_text[bt_pos] = "D";
+                            bt_pos = bt_pos + 1;
+
+                            bool_text[bt_pos] = "'";
+                            bt_pos = bt_pos + 1;
                         end
                         else if (bt_d1 && !bt_d0) begin
-                            bool_text[bt_pos]="D";
-                            bt_pos=bt_pos+1;
+                            bool_text[bt_pos] = "D";
+                            bt_pos = bt_pos + 1;
                         end
 
                     end
@@ -918,8 +861,7 @@ module tt_um_vga_kmap (
 
         end
 
-        bool_text_len = bt_pos;
-
+        bool_text_len = bt_pos[7:0];
 
         for (bt_i = 0; bt_i < 64; bt_i = bt_i + 1) begin
 
@@ -935,10 +877,9 @@ module tt_um_vga_kmap (
 
     end
 
-
-    /* =========================================================
-       GROUP BORDER DETECTION
-       ========================================================= */
+    // =========================================================
+    // GROUP BORDER DETECTION
+    // =========================================================
 
     wire [1:0] top_row =
         (tile_row == 2'd0) ? 2'd3 : tile_row - 2'd1;
@@ -952,7 +893,6 @@ module tt_um_vga_kmap (
     wire [1:0] right_col =
         (tile_col == 2'd3) ? 2'd0 : tile_col + 2'd1;
 
-
     wire [3:0] top_minterm =
         kmap_minterm(top_row,tile_col);
 
@@ -965,10 +905,9 @@ module tt_um_vga_kmap (
     wire [3:0] right_minterm =
         kmap_minterm(tile_row,right_col);
 
-
-    /* =========================================================
-       TWO-COLOR BORDER STORAGE
-       ========================================================= */
+    // =========================================================
+    // TWO-COLOR BORDER STORAGE
+    // =========================================================
 
     reg [2:0] top_border_color1;
     reg [2:0] top_border_color2;
@@ -1008,119 +947,74 @@ module tt_um_vga_kmap (
         left_border_count = 2'd0;
         right_border_count = 2'd0;
 
-
         for (bi = 0; bi < 16; bi = bi + 1) begin
 
             if (selected_group_mask[bi][display_minterm]) begin
 
-
-                /* TOP */
-
                 if (!selected_group_mask[bi][top_minterm]) begin
 
                     if (top_border_count == 2'd0) begin
-
                         top_border_color1 =
                             selected_group_color[bi];
-
-                        top_border_count =
-                            2'd1;
-
+                        top_border_count = 2'd1;
                     end
                     else if ((top_border_count == 2'd1) &&
                              (selected_group_color[bi] !=
                               top_border_color1)) begin
-
                         top_border_color2 =
                             selected_group_color[bi];
-
-                        top_border_count =
-                            2'd2;
-
+                        top_border_count = 2'd2;
                     end
 
                 end
-
-
-                /* BOTTOM */
 
                 if (!selected_group_mask[bi][bottom_minterm]) begin
 
                     if (bottom_border_count == 2'd0) begin
-
                         bottom_border_color1 =
                             selected_group_color[bi];
-
-                        bottom_border_count =
-                            2'd1;
-
+                        bottom_border_count = 2'd1;
                     end
                     else if ((bottom_border_count == 2'd1) &&
                              (selected_group_color[bi] !=
                               bottom_border_color1)) begin
-
                         bottom_border_color2 =
                             selected_group_color[bi];
-
-                        bottom_border_count =
-                            2'd2;
-
+                        bottom_border_count = 2'd2;
                     end
 
                 end
-
-
-                /* LEFT */
 
                 if (!selected_group_mask[bi][left_minterm]) begin
 
                     if (left_border_count == 2'd0) begin
-
                         left_border_color1 =
                             selected_group_color[bi];
-
-                        left_border_count =
-                            2'd1;
-
+                        left_border_count = 2'd1;
                     end
                     else if ((left_border_count == 2'd1) &&
                              (selected_group_color[bi] !=
                               left_border_color1)) begin
-
                         left_border_color2 =
                             selected_group_color[bi];
-
-                        left_border_count =
-                            2'd2;
-
+                        left_border_count = 2'd2;
                     end
 
                 end
 
-
-                /* RIGHT */
-
                 if (!selected_group_mask[bi][right_minterm]) begin
 
                     if (right_border_count == 2'd0) begin
-
                         right_border_color1 =
                             selected_group_color[bi];
-
-                        right_border_count =
-                            2'd1;
-
+                        right_border_count = 2'd1;
                     end
                     else if ((right_border_count == 2'd1) &&
                              (selected_group_color[bi] !=
                               right_border_color1)) begin
-
                         right_border_color2 =
                             selected_group_color[bi];
-
-                        right_border_count =
-                            2'd2;
-
+                        right_border_count = 2'd2;
                     end
 
                 end
@@ -1131,13 +1025,9 @@ module tt_um_vga_kmap (
 
     end
 
-
-    /* =========================================================
-       TEXT SYSTEM
-       
-       Header and control text removed.
-       Row/column labels and Boolean expression retained.
-       ========================================================= */
+    // =========================================================
+    // TEXT SYSTEM
+    // =========================================================
 
     localparam TEXT_SCALE  = 2;
     localparam TEXT_CHAR_W = 12;
@@ -1162,10 +1052,9 @@ module tt_um_vga_kmap (
 
     localparam BOOL_MAX_CHARS = 64;
 
-
-    /* =========================================================
-       TEXT REGION DETECTION
-       ========================================================= */
+    // =========================================================
+    // TEXT REGION DETECTION
+    // =========================================================
 
     wire inside_col1 =
         (hpos >= COL1_X) &&
@@ -1191,7 +1080,6 @@ module tt_um_vga_kmap (
         (vpos >= COL_TEXT_Y) &&
         (vpos < COL_TEXT_Y + TEXT_CHAR_H);
 
-
     wire inside_row1 =
         (hpos >= ROW_TEXT_X) &&
         (hpos < ROW_TEXT_X + 4 * TEXT_CHAR_W) &&
@@ -1216,12 +1104,12 @@ module tt_um_vga_kmap (
         (vpos >= ROW4_Y) &&
         (vpos < ROW4_Y + TEXT_CHAR_H);
 
+    wire [7:0] bool_second_len;
 
-    wire bool_second_len =
+    assign bool_second_len =
         (bool_text_len > 8'd53) ?
         (bool_text_len - 8'd53) :
         8'd0;
-
 
     wire [9:0] bool_start_x;
 
@@ -1230,14 +1118,12 @@ module tt_um_vga_kmap (
         (10'd320 - ((bool_text_len * TEXT_CHAR_W) / 2)) :
         10'd2;
 
-
     wire [9:0] bool_second_x;
 
     assign bool_second_x =
-        (bool_second_len != 0) ?
+        (bool_second_len != 8'd0) ?
         (10'd320 - ((bool_second_len * TEXT_CHAR_W) / 2)) :
         10'd320;
-
 
     wire inside_bool1 =
         (hpos >= bool_start_x) &&
@@ -1246,12 +1132,11 @@ module tt_um_vga_kmap (
         (vpos < BOOL_Y1 + TEXT_CHAR_H);
 
     wire inside_bool2 =
-        (bool_second_len != 0) &&
+        (bool_second_len != 8'd0) &&
         (hpos >= bool_second_x) &&
         (hpos < bool_second_x + BOOL_MAX_CHARS * TEXT_CHAR_W) &&
         (vpos >= BOOL_Y2) &&
         (vpos < BOOL_Y2 + TEXT_CHAR_H);
-
 
     wire inside_any_text =
         inside_col1 |
@@ -1265,10 +1150,9 @@ module tt_um_vga_kmap (
         inside_bool1 |
         inside_bool2;
 
-
-    /* =========================================================
-       TEXT COORDINATES
-       ========================================================= */
+    // =========================================================
+    // TEXT COORDINATES
+    // =========================================================
 
     reg [9:0] text_local_x;
     reg [9:0] text_local_y;
@@ -1279,79 +1163,76 @@ module tt_um_vga_kmap (
         text_local_y = 10'd0;
 
         if (inside_col1) begin
-
             text_local_x = hpos - COL1_X;
             text_local_y = vpos - COL_TEXT_Y;
-
         end
         else if (inside_col2) begin
-
             text_local_x = hpos - COL2_X;
             text_local_y = vpos - COL_TEXT_Y;
-
         end
         else if (inside_col3) begin
-
             text_local_x = hpos - COL3_X;
             text_local_y = vpos - COL_TEXT_Y;
-
         end
         else if (inside_col4) begin
-
             text_local_x = hpos - COL4_X;
             text_local_y = vpos - COL_TEXT_Y;
-
         end
         else if (inside_row1) begin
-
             text_local_x = hpos - ROW_TEXT_X;
             text_local_y = vpos - ROW1_Y;
-
         end
         else if (inside_row2) begin
-
             text_local_x = hpos - ROW_TEXT_X;
             text_local_y = vpos - ROW2_Y;
-
         end
         else if (inside_row3) begin
-
             text_local_x = hpos - ROW_TEXT_X;
             text_local_y = vpos - ROW3_Y;
-
         end
         else if (inside_row4) begin
-
             text_local_x = hpos - ROW_TEXT_X;
             text_local_y = vpos - ROW4_Y;
-
         end
         else if (inside_bool1) begin
-
             text_local_x = hpos - bool_start_x;
             text_local_y = vpos - BOOL_Y1;
-
         end
         else if (inside_bool2) begin
-
             text_local_x = hpos - bool_second_x;
             text_local_y = vpos - BOOL_Y2;
-
         end
 
     end
 
+    wire [9:0] char_pos_w;
 
-    wire [5:0] char_pos =
-        text_local_x / TEXT_CHAR_W;
+    assign char_pos_w =
+        text_local_x / 10'd12;
 
-    wire [3:0] font_y =
-        (text_local_y % TEXT_CHAR_H) / TEXT_SCALE;
+    wire [5:0] char_pos;
 
+    assign char_pos =
+        char_pos_w[5:0];
 
-    /* =========================================================
-       CHARACTER GENERATOR
-       ========================================================= */
+    wire [9:0] font_y_w;
+
+    assign font_y_w =
+        (text_local_y % 10'd14) / 10'd2;
+
+    wire [3:0] font_y;
+
+    assign font_y =
+        font_y_w[3:0];
+
+    wire [6:0] bool_text_index2;
+
+    assign bool_text_index2 =
+        7'd64 + {1'b0,char_pos};
+
+    // =========================================================
+    // CHARACTER GENERATOR
+    // =========================================================
 
     reg [7:0] control_char;
 
@@ -1360,136 +1241,94 @@ module tt_um_vga_kmap (
         control_char = " ";
 
         if (inside_col1) begin
-
             case (char_pos)
-
-                0: control_char="C";
-                1: control_char="'";
-                2: control_char="D";
-                3: control_char="'";
-
-                default:
-                    control_char=" ";
-
+                0: control_char = "C";
+                1: control_char = "'";
+                2: control_char = "D";
+                3: control_char = "'";
+                default: control_char = " ";
             endcase
-
         end
+
         else if (inside_col2) begin
-
             case (char_pos)
-
-                0: control_char="C";
-                1: control_char="'";
-                2: control_char="D";
-
-                default:
-                    control_char=" ";
-
+                0: control_char = "C";
+                1: control_char = "'";
+                2: control_char = "D";
+                default: control_char = " ";
             endcase
-
         end
+
         else if (inside_col3) begin
-
             case (char_pos)
-
-                0: control_char="C";
-                1: control_char="D";
-
-                default:
-                    control_char=" ";
-
+                0: control_char = "C";
+                1: control_char = "D";
+                default: control_char = " ";
             endcase
-
         end
+
         else if (inside_col4) begin
-
             case (char_pos)
-
-                0: control_char="C";
-                1: control_char="D";
-                2: control_char="'";
-
-                default:
-                    control_char=" ";
-
+                0: control_char = "C";
+                1: control_char = "D";
+                2: control_char = "'";
+                default: control_char = " ";
             endcase
-
         end
+
         else if (inside_row1) begin
-
             case (char_pos)
-
-                0: control_char="A";
-                1: control_char="'";
-                2: control_char="B";
-                3: control_char="'";
-
-                default:
-                    control_char=" ";
-
+                0: control_char = "A";
+                1: control_char = "'";
+                2: control_char = "B";
+                3: control_char = "'";
+                default: control_char = " ";
             endcase
-
         end
+
         else if (inside_row2) begin
-
             case (char_pos)
-
-                0: control_char="A";
-                1: control_char="'";
-                2: control_char="B";
-
-                default:
-                    control_char=" ";
-
+                0: control_char = "A";
+                1: control_char = "'";
+                2: control_char = "B";
+                default: control_char = " ";
             endcase
-
         end
+
         else if (inside_row3) begin
-
             case (char_pos)
-
-                0: control_char="A";
-                1: control_char="B";
-
-                default:
-                    control_char=" ";
-
+                0: control_char = "A";
+                1: control_char = "B";
+                default: control_char = " ";
             endcase
-
         end
+
         else if (inside_row4) begin
-
             case (char_pos)
-
-                0: control_char="A";
-                1: control_char="B";
-                2: control_char="'";
-
-                default:
-                    control_char=" ";
-
+                0: control_char = "A";
+                1: control_char = "B";
+                2: control_char = "'";
+                default: control_char = " ";
             endcase
-
         end
+
         else if (inside_bool1) begin
-
-            control_char =
-                bool_text[char_pos];
-
+            if (char_pos < 6'd53)
+                control_char = bool_text[char_pos];
+            else
+                control_char = " ";
         end
+
         else if (inside_bool2) begin
-
             control_char =
-                bool_text[64 + char_pos];
-
+                bool_text[bool_text_index2];
         end
 
     end
 
-
-    /* =========================================================
-       FONT
-       ========================================================= */
+    // =========================================================
+    // FONT
+    // =========================================================
 
     function [4:0] font_row;
         input [7:0] ch;
@@ -1989,14 +1828,13 @@ module tt_um_vga_kmap (
             endcase
 
         end
-    endfunction
 
+    endfunction
 
     wire [4:0] font_bits;
 
     assign font_bits =
         font_row(control_char,font_y);
-
 
     wire font_pixel;
 
@@ -2007,10 +1845,9 @@ module tt_um_vga_kmap (
         ] :
         1'b0;
 
-
-    /* =========================================================
-       VGA PIXEL OUTPUT
-       ========================================================= */
+    // =========================================================
+    // VGA PIXEL OUTPUT
+    // =========================================================
 
     reg red;
     reg green;
@@ -2021,7 +1858,6 @@ module tt_um_vga_kmap (
         red   = 1'b0;
         green = 1'b0;
         blue  = 1'b0;
-
 
         if (display_on) begin
 
@@ -2209,8 +2045,6 @@ module tt_um_vga_kmap (
 
             end
 
-            /* No header or control text is rendered here. */
-
             else if (inside_any_text && font_pixel) begin
 
                 red   = 1'b1;
@@ -2223,10 +2057,9 @@ module tt_um_vga_kmap (
 
     end
 
-
-    /* =========================================================
-       OUTPUT PINS
-       ========================================================= */
+    // =========================================================
+    // OUTPUT PINS
+    // =========================================================
 
     assign uo_out[7] = hsync;
     assign uo_out[3] = vsync;
